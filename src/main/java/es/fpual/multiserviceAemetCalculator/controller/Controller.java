@@ -1,8 +1,6 @@
 package es.fpual.multiserviceAemetCalculator.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -11,6 +9,10 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,15 +25,39 @@ import es.fpual.multiserviceAemetCalculator.model.DatosAemet;
 public class Controller {
 
 //
-//	@GetMapping("/datos")
+//	@GetMapping("/datos{}")
 //	public DatosAemet getMunicipiosSeparadosPorComas() {
 //		
 //		return service.getDatos();
 //		
 //	}
+	
+	@GetMapping("/media/{stringMunicipios}")
+	private static ResponseEntity<?> getMedia(@PathVariable String stringMunicipios) {
+				
+		String[] municipios = stringMunicipios.split(",");
+		int totalMin = 0;
+		int totalMax = 0;
+		
+		for (int i = 0; i < municipios.length; i++) {
+			
+			DatosAemet dato = getDatosDeUnMunicipio(municipios[i]);
+			
+			
+			suma(dato.getTemperaturaMaxima(), totalMax);
+			suma(dato.getTemperaturaMinima(), totalMin);
+		}
+		
+		
+		division(totalMax, municipios.length);
+		division(totalMin, municipios.length);
+		
+		
 
-	private static List<DatosAemet> getDatos(List<String> municipios) {
-		List<DatosAemet> datos = new ArrayList<>();
+		return new ResponseEntity<>(" HEHE ",HttpStatus.OK);
+	}
+
+	private static DatosAemet getDatosDeUnMunicipio(String municipio) {
 
 		HttpClient httpclient = HttpClients.createDefault();
 		HttpResponse response;
@@ -39,23 +65,21 @@ public class Controller {
 		String entityString;
 		Gson jsonParser = new Gson();
 
-		for (String municipio : municipios) {
-			HttpGet httpget = new HttpGet("http://localhost:8080/aemet/" + municipio);
+		HttpGet httpget = new HttpGet("http://localhost:8080/aemet/" + municipio);
 
-			try {
-				response = httpclient.execute(httpget);
-				entity = response.getEntity();
-				entityString = EntityUtils.toString(entity);
-				datos.add(jsonParser.fromJson(entityString, DatosAemet.class));
+		try {
+			response = httpclient.execute(httpget);
+			entity = response.getEntity();
+			entityString = EntityUtils.toString(entity);
+			return jsonParser.fromJson(entityString, DatosAemet.class);
 
-			} catch (ClientProtocolException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		return datos;
+
+		return null;
 	}
 
 	private static int division(int a, int b) {
@@ -103,5 +127,33 @@ public class Controller {
 
 		return 0;
 	}
+
+//	private static List<DatosAemet> getDatos(List<String> municipios) {
+//	List<DatosAemet> datos = new ArrayList<>();
+//
+//	HttpClient httpclient = HttpClients.createDefault();
+//	HttpResponse response;
+//	HttpEntity entity;
+//	String entityString;
+//	Gson jsonParser = new Gson();
+//
+//	for (String municipio : municipios) {
+//		HttpGet httpget = new HttpGet("http://localhost:8080/aemet/" + municipio);
+//
+//		try {
+//			response = httpclient.execute(httpget);
+//			entity = response.getEntity();
+//			entityString = EntityUtils.toString(entity);
+//			datos.add(jsonParser.fromJson(entityString, DatosAemet.class));
+//
+//		} catch (ClientProtocolException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//
+//	}
+//	return datos;
+//}
 
 }
