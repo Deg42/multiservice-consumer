@@ -1,6 +1,8 @@
 package es.fpual.multiserviceAemetCalculator.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -31,30 +33,32 @@ public class Controller {
 //		return service.getDatos();
 //		
 //	}
-	
+
 	@GetMapping("/media/{stringMunicipios}")
 	private static ResponseEntity<?> getMedia(@PathVariable String stringMunicipios) {
-				
-		String[] municipios = stringMunicipios.split(",");
+
+		String[] codesMunicipios = stringMunicipios.split(",");
 		int totalMin = 0;
 		int totalMax = 0;
-		
-		for (int i = 0; i < municipios.length; i++) {
-			
-			DatosAemet dato = getDatosDeUnMunicipio(municipios[i]);
-			
-			
-			suma(dato.getTemperaturaMaxima(), totalMax);
-			suma(dato.getTemperaturaMinima(), totalMin);
-		}
-		
-		
-		division(totalMax, municipios.length);
-		division(totalMin, municipios.length);
-		
-		
+		List<String> nombreMunicipios = new ArrayList<String>();
 
-		return new ResponseEntity<>(" HEHE ",HttpStatus.OK);
+		for (int i = 0; i < codesMunicipios.length; i++) {
+
+			DatosAemet dato = getDatosDeUnMunicipio(codesMunicipios[i]);
+
+			totalMax = suma(dato.getTemperaturaMaxima(), totalMax);
+			totalMin = suma(dato.getTemperaturaMinima(), totalMin);
+			
+			nombreMunicipios.add(dato.getMunicipio());
+			
+		}
+
+		int mediaMax = division(totalMax, codesMunicipios.length);
+		int mediaMin = division(totalMin, codesMunicipios.length);
+		
+		String respuesta = "De los municipios: " + nombreMunicipios.toString() + "; la temperatura máxima media es " + mediaMax
+				+ " y la temperatura mínima media es " + mediaMin;
+		return new ResponseEntity<>(respuesta, HttpStatus.OK);
 	}
 
 	private static DatosAemet getDatosDeUnMunicipio(String municipio) {
@@ -65,7 +69,7 @@ public class Controller {
 		String entityString;
 		Gson jsonParser = new Gson();
 
-		HttpGet httpget = new HttpGet("http://localhost:8080/aemet/" + municipio);
+		HttpGet httpget = new HttpGet("http://localhost:8084/aemet/" + municipio);
 
 		try {
 			response = httpclient.execute(httpget);
