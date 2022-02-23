@@ -1,4 +1,4 @@
-package es.fpual.multiserviceAemetCalculator.model;
+package es.fpual.multiserviceAemetCalculator;
 
 public class DatosAemet {
 	
